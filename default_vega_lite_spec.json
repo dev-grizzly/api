@@ -5,6 +5,9 @@
   },
   "title": {
     "text": "",
+    "lineHeight":0,
+    "offset":-10,
+    "baseline":"line-top",
     "color": "#36B7B4",
     "subtitle": "",
     "subtitleColor": "#676A86"
