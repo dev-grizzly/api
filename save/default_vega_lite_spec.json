@@ -1,0 +1,94 @@
+{
+  "config": {
+    "view": {"continuousWidth": 400, "continuousHeight": 300, "stroke": null},
+    "font": "Circular Std Book"
+  },
+  "title": {
+    "text": "",
+    "lineHeight":0,
+    "offset":-10,
+    "baseline":"line-top",
+    "color": "#36B7B4",
+    "subtitle": "",
+    "subtitleColor": "#676A86"
+  },
+  "data": {
+    "values": []
+  },
+  "mark": {
+    "type": "area",
+    "color": {
+      "gradient": "linear",
+      "stops": [
+        {"color": "#ffffff00", "offset": 0.2},
+        {"color": "#36B7B4", "offset": 0.8}
+      ],
+      "x1": 1,
+      "y1": 1,
+      "x2": 1,
+      "y2": 0
+    },
+    "interpolate": "monotone",
+    "line": {"color": "#36B7B4"},
+    "opacity": 1
+  },
+  "transform": [
+    {
+      "filter": "datum.value"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "date",
+      "type": "temporal",
+      "axis": {
+        "domainColor": "#676A86",
+        "domainOpacity": 0.5,
+        "grid": false,
+        "labelAngle": 0,
+        "labelColor": "#676A86",
+        "labelOpacity": 0.7,
+        "orient": "bottom",
+        "tickColor": "#676A86",
+        "tickCount": 10,
+        "tickOpacity": 0.5,
+        "title": "",
+        "titleAlign": "center",
+        "titleAnchor": "middle",
+        "titleColor": "#676A86",
+        "titleFontSize": 12,
+        "titleOpacity": 0.8,
+        "titleX": 207,
+        "titleY": -15
+      }
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "axis": {
+        "domainColor": "#676A86",
+        "domainOpacity": 0.5,
+        "format": ".0f",
+        "gridColor": "#676A86",
+        "gridDash": [1, 5],
+        "gridOpacity": 0.5,
+        "labelColor": "#676A86",
+        "labelOpacity": 0.7,
+        "labelPadding": 5,
+        "tickColor": "#676A86",
+        "tickCount": 8,
+        "tickOpacity": 0.5,
+        "ticks": false,
+        "title": "",
+        "titleAlign": "left",
+        "titleAngle": 0,
+        "titleBaseline": "bottom",
+        "titleColor": "#676A86",
+        "titleFontSize": 12,
+        "titleOpacity": 0.8,
+        "titleX": 0,
+        "titleY": -7
+      }
+    }
+  }
+}
