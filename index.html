@@ -1,0 +1,214 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+
+<body>
+  <script>
+    var url = window.location.href;
+    var urlComponents = url.split("#");
+    country = urlComponents[1];
+    indicator = urlComponents[2];
+    var D = {};
+    var timeSeries = {};
+    var M = [];
+
+
+    d3.csv("https://raw.githubusercontent.com/EconomicsObservatory/api/main/metadata-full.csv").then(function (data) {
+      data = data.filter(function (d) {
+        if (Object.keys(d).indexOf("") > -1) {
+          delete d[""];
+        }
+        return d.country != "";
+      });
+      console.log(data);
+      return data
+
+    }).then(function (data) {
+      data.forEach(function (d) {
+        if (Object.keys(D).indexOf(d.country) < 0) {
+          D[d.country] = {};
+        };
+        D[d.country][d.ecoSeries] = d
+      })
+      // console.log(D);
+
+    })
+
+    function load(country, indicator) {
+      if (Object.keys(D).indexOf(country) < 0) {
+        document.body.innerHTML = "Country not found";
+      } else if (Object.keys(D[country]).indexOf(indicator) < 0) {
+        document.body.innerHTML = "Indicator not found";
+      } else {
+        timeSeries = D[country][indicator];
+        console.log(timeSeries);
+      }
+
+      d3.json(timeSeries.API_full)
+        .then(function (data) {
+          // console.log(data, timeSeries.date, country)
+
+          if (country == 'gbr') {
+            const keysToKeep = ['date', 'value'];
+            const cull = list => list.map(o => Object.fromEntries(
+              keysToKeep.map(k => [k, o[k]])
+            ));
+            if (timeSeries.date == 'months.date') {
+              M = cull(data['months']);
+            } else if (timeSeries.date == 'quarters.date') {
+              M = cull(data['quarters']);
+            }
+          } else if (country == 'usa') {
+            const keysToKeep = ['date', 'value'];
+            const cull = list => list.map(o => Object.fromEntries(
+              keysToKeep.map(k => [k, o[k]])
+            ));
+            M = cull(data['observations'])
+          } else if (country == 'can') {
+            const keysToKeep = ['refPer', 'value'];
+            const cull = list => list.map(o => Object.fromEntries(
+              keysToKeep.map(k => [k, o[k]])
+            ));
+            M = cull(data[0]['object']['vectorDataPoint']);
+          } else if (country == 'aus') {
+            console.log(data)
+            var Mdates = data.data.structure.dimensions.observation[0].values;
+            var Mvalues = Object.values(data.data.dataSets[0].series[Object.keys(data.data.dataSets[0].series)[0]].observations).flat();
+            M = []
+            for (var i = 0; i < Mdates.length; i++) {
+              M.push({ date: Mdates[i].end, value: Mvalues[i] })
+            }
+            console.log(M)
+          }
+          else if (country == 'nga') {
+            console.log(data)
+            var Mdates = data.data.structure.dimensions.observation[0].values;
+            var Mvalues = Object.values(data.data.dataSets[0].series[Object.keys(data.data.dataSets[0].series)[0]].observations).flat();
+            M = []
+            for (var i = 0; i < Mdates.length; i++) {
+              M.push({ date: Mdates[i].end, value: Mvalues[i] })
+            }
+            console.log(M)
+          }
+        })
+
+
+      setTimeout(function () {
+        d3.json("https://raw.githubusercontent.com/EconomicsObservatory/api/main/default_vega_lite_spec.json")
+          .then(function (vlSpec) {
+            vlSpec.data.values = M;
+            if (timeSeries.date == "quarters.date")
+              vlSpec.transform.push({
+                "as": "date",
+                "calculate": "timeParse(replace(replace(replace(replace(datum.date, 'Q1', '02'), 'Q2', '05'),  'Q3', '08'), 'Q4', '11'), '%Y %m')"
+              });
+            if (timeSeries.country == "can")
+              vlSpec.transform.push({
+                "as": "date",
+                "calculate": "toDate(datum.refPer)"
+              });
+            vlSpec.title.text = timeSeries.Title;
+            vlSpec.title.subtitle = timeSeries.SubTitle;
+            vlSpec.encoding.y.axis.title = timeSeries.units;
+            console.log(vlSpec)
+            vegaEmbed(
+              '#view',
+              vlSpec
+            );
+            document.querySelector('#code').innerHTML = '<code><b>ECO API</b>: <a href="' + window.location + '">' + window.location + '</a><br><br><b>Original API</b>: <a href="' + timeSeries.API_full + '">' + timeSeries.API_full + '"</a><br><br>' + JSON.stringify(M) + '</code>'
+          });
+      }, 300)
+    }
+
+    function updateIndicatorSelector() {
+      var country = document.getElementById("countrySelector").value;
+      var indicatorSelector = document.getElementById("indicatorSelector");
+      indicatorSelector.innerHTML = "";
+      for (var indicator in D[country]) {
+        var option = document.createElement("option");
+        option.setAttribute("value", D[country][indicator].ecoSeries);
+        option.innerHTML = D[country][indicator].Title;
+        indicatorSelector.appendChild(option);
+      }
+    }
+
+    function updateData() {
+      country = document.getElementById("countrySelector").value
+      indicator = document.getElementById("indicatorSelector").value
+      console.log(country, indicator)
+      load(country, indicator)
+      window.location.href = "#" + country + "#" + indicator;
+      setTimeout(() => {
+        load(country, indicator)
+      }, 400);
+    }
+
+    setTimeout(function () {
+      console.log(D)
+      var countrySelector = document.createElement("select");
+      countrySelector.setAttribute("id", "countrySelector");
+      countrySelector.setAttribute("onchange", "updateIndicatorSelector();");
+      var countrySelectorLabel = document.createElement("label");
+      countrySelectorLabel.setAttribute("for", "countrySelector");
+      countrySelectorLabel.innerHTML = "Select a country:&nbsp;";
+      document.querySelector('#menu').appendChild(countrySelectorLabel);
+      document.querySelector('#menu').appendChild(countrySelector);
+
+      for (var country in D) {
+        var option = document.createElement("option");
+        option.setAttribute("value", country);
+        option.innerHTML = country;
+        countrySelector.appendChild(option);
+      }
+
+      var indicatorSelector = document.createElement("select");
+      indicatorSelector.setAttribute("id", "indicatorSelector");
+      indicatorSelector.setAttribute("onchange", "updateData()");
+
+      var indicatorSelectorLabel = document.createElement("label");
+      indicatorSelectorLabel.setAttribute("for", "indicatorSelector");
+      indicatorSelectorLabel.innerHTML = "&nbsp;&nbsp;indicator:&nbsp;";
+      document.querySelector('#menu').appendChild(indicatorSelectorLabel);
+      document.querySelector('#menu').appendChild(indicatorSelector);
+
+      // set selected value in dropdown
+
+    }, 100)
+
+    setTimeout(() => {
+      load(country, indicator);
+      updateIndicatorSelector()
+      // updateData()
+    }, 200);
+
+    setTimeout(() => {
+      var i;
+      for (i = 0; i < countrySelector.options.length; i++) {
+        if (countrySelector.options[i].value == country) {
+          countrySelector.selectedIndex = i;
+          break;
+        }
+      }
+      for (i = 0; i < indicatorSelector.options.length; i++) {
+        if (indicatorSelector.options[i].value == indicator) {
+          indicatorSelector.selectedIndex = i;
+          break;
+        }
+      }
+    }, 250);
+
+  </script>
+
+  <div id="view" style="overflow: hidden !important;"></div>
+  <div id="code"></div>
+  <div id="menu" style="position:fixed; top:40px; left:500px;"></div>
+
+</body>
+
+</html>
