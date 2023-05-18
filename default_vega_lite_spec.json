@@ -32,6 +32,11 @@
     "line": {"color": "#36B7B4"},
     "opacity": 1
   },
+  "transform": [
+    {
+      "filter": "datum.value"
+    }
+  ],
   "encoding": {
     "x": {
       "field": "date",
