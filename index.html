@@ -77,25 +77,50 @@
             ));
             M = cull(data[0]['object']['vectorDataPoint']);
           } else if (country == 'aus') {
-            console.log(data)
             var Mdates = data.data.structure.dimensions.observation[0].values;
             var Mvalues = Object.values(data.data.dataSets[0].series[Object.keys(data.data.dataSets[0].series)[0]].observations).flat();
             M = []
             for (var i = 0; i < Mdates.length; i++) {
               M.push({ date: Mdates[i].end, value: Mvalues[i] })
             }
-            console.log(M)
           }
           else if (country == 'nga') {
-            console.log(data)
-            var Mdates = data.data.structure.dimensions.observation[0].values;
-            var Mvalues = Object.values(data.data.dataSets[0].series[Object.keys(data.data.dataSets[0].series)[0]].observations).flat();
+            if (timeSeries.source == 'CBN') {
+              var Mdates = ['2013-10-01', '2014-01-01', '2014-04-01', '2014-07-01', '2014-10-01', '2015-01-01', '2015-04-01', '2015-07-01', '2015-10-01']
+              var Mvalues = data.data[0].values;
+              M = []
+              for (var i = 0; i < Mdates.length; i++) {
+                M.push({ date: Mdates[i], value: Mvalues[i] })
+              }
+            } else {
+              const keysToKeep = ['Time', 'Value'];
+              const cull = list => list.map(o => Object.fromEntries(
+                keysToKeep.map(k => [k, o[k]])
+              ));
+              M = cull(data.data);
+            }
+          }
+          else if (country == 'ken') {
+            var start = new Date(data.data[0].startDate.slice(0, 10));
+            var end = new Date(data.data[0].endDate.slice(0, 10));
+            var Mdates = d3.timeMonth.range(start, end, (timeSeries.frequency == "Q" ? 3 : 1)).map(d3.timeFormat("%Y-%m-%d"));
+
+            var Mvalues = data.data[0].values;
             M = []
             for (var i = 0; i < Mdates.length; i++) {
-              M.push({ date: Mdates[i].end, value: Mvalues[i] })
+              M.push({ date: Mdates[i], value: Mvalues[i] })
             }
-            console.log(M)
+          } else if (country == 'jpn') {
+            M = []
+            var d= data.GET_STATS.STATISTICAL_DATA.DATA_INF.DATA_OBJ.filter(function (d) {
+              return d.VALUE['@cycle'] == '1'
+            })
+            for (var i = 0; i < d.length; i++) {
+              var e= d[i].VALUE['@time']
+              M.push({ date: e.slice(0,4)+'-'+ e.slice(4, 6)+'-'+ '01', value: d[i].VALUE['$'] })
+            }
           }
+          console.log(M)
         })
 
 
@@ -113,17 +138,27 @@
                 "as": "date",
                 "calculate": "toDate(datum.refPer)"
               });
+            if ((timeSeries.country == "nga") && (timeSeries.source == "CBN")) {
+              vlSpec.transform.push({
+                "as": "date",
+                "calculate": "toDate(datum.Time)"
+              });
+              vlSpec.transform.push({
+                "as": "value",
+                "calculate": "datum.Value"
+              });
+            }
             vlSpec.title.text = timeSeries.Title;
             vlSpec.title.subtitle = timeSeries.SubTitle;
             vlSpec.encoding.y.axis.title = timeSeries.units;
-            console.log(vlSpec)
+            // console.log(vlSpec)
             vegaEmbed(
               '#view',
               vlSpec
             );
             document.querySelector('#code').innerHTML = '<code><b>ECO API</b>: <a href="' + window.location + '">' + window.location + '</a><br><br><b>Original API</b>: <a href="' + timeSeries.API_full + '">' + timeSeries.API_full + '"</a><br><br>' + JSON.stringify(M) + '</code>'
           });
-      }, 300)
+      }, 500)
     }
 
     function updateIndicatorSelector() {
@@ -183,7 +218,9 @@
 
     setTimeout(() => {
       load(country, indicator);
-      updateIndicatorSelector()
+      setTimeout(() => {
+        updateIndicatorSelector()  
+      }, 200);
       // updateData()
     }, 200);
 
