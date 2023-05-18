@@ -10,6 +10,8 @@
 
 <body>
   <script>
+
+    //load api compoenents. using # instead of / to avoid github pages 404
     var url = window.location.href;
     var urlComponents = url.split("#");
     country = urlComponents[1];
@@ -18,7 +20,7 @@
     var timeSeries = {};
     var M = [];
 
-
+    //ths is the main function that loads the metadata directly from github
     d3.csv("https://raw.githubusercontent.com/EconomicsObservatory/api/main/metadata-full.csv").then(function (data) {
       data = data.filter(function (d) {
         if (Object.keys(d).indexOf("") > -1) {
@@ -28,7 +30,8 @@
       });
       console.log(data);
       return data
-
+    
+    //we select the country and indicator from the url and construct teh dictionary D
     }).then(function (data) {
       data.forEach(function (d) {
         if (Object.keys(D).indexOf(d.country) < 0) {
@@ -40,6 +43,7 @@
 
     })
 
+    //this function create the api call using the csv metafile
     function load(country, indicator) {
       if (Object.keys(D).indexOf(country) < 0) {
         document.body.innerHTML = "Country not found";
@@ -50,6 +54,7 @@
         console.log(timeSeries);
       }
 
+      //country-specific api calls
       d3.json(timeSeries.API_full)
         .then(function (data) {
           // console.log(data, timeSeries.date, country)
@@ -123,7 +128,7 @@
           console.log(M)
         })
 
-
+      //load a master vegalite spec and modify it to the country and indicator
       setTimeout(function () {
         d3.json("https://raw.githubusercontent.com/EconomicsObservatory/api/main/default_vega_lite_spec.json")
           .then(function (vlSpec) {
@@ -161,6 +166,8 @@
       }, 500)
     }
 
+    //add the dropdowns
+    // first, the country
     function updateIndicatorSelector() {
       var country = document.getElementById("countrySelector").value;
       var indicatorSelector = document.getElementById("indicatorSelector");
@@ -181,7 +188,7 @@
       window.location.href = "#" + country + "#" + indicator;
       setTimeout(() => {
         load(country, indicator)
-      }, 400);
+      }, 400);  //we need to wait for the page to load before we can update the dropdowns
     }
 
     setTimeout(function () {
@@ -214,7 +221,7 @@
 
       // set selected value in dropdown
 
-    }, 100)
+    }, 100) //we need to wait for the page to load before we can update the dropdowns
 
     setTimeout(() => {
       load(country, indicator);
@@ -222,7 +229,7 @@
         updateIndicatorSelector()  
       }, 200);
       // updateData()
-    }, 200);
+    }, 200);  //
 
     setTimeout(() => {
       var i;
@@ -249,3 +256,5 @@
 </body>
 
 </html>
+
+annotate this code 
