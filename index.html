@@ -21,7 +21,7 @@
     var M = [];
 
     //ths is the main function that loads the metadata directly from github
-    d3.csv("https://raw.githubusercontent.com/EconomicsObservatory/api/main/metadata-full.csv").then(function (data) {
+    d3.csv("./metadata-full.csv").then(function (data) {
       data = data.filter(function (d) {
         if (Object.keys(d).indexOf("") > -1) {
           delete d[""];
@@ -30,8 +30,8 @@
       });
       console.log(data);
       return data
-    
-    //we select the country and indicator from the url and construct teh dictionary D
+
+      //we select the country and indicator from the url and construct teh dictionary D
     }).then(function (data) {
       data.forEach(function (d) {
         if (Object.keys(D).indexOf(d.country) < 0) {
@@ -117,12 +117,12 @@
             }
           } else if (country == 'jpn') {
             M = []
-            var d= data.GET_STATS.STATISTICAL_DATA.DATA_INF.DATA_OBJ.filter(function (d) {
+            var d = data.GET_STATS.STATISTICAL_DATA.DATA_INF.DATA_OBJ.filter(function (d) {
               return d.VALUE['@cycle'] == '1'
             })
             for (var i = 0; i < d.length; i++) {
-              var e= d[i].VALUE['@time']
-              M.push({ date: e.slice(0,4)+'-'+ e.slice(4, 6)+'-'+ '01', value: d[i].VALUE['$'] })
+              var e = d[i].VALUE['@time']
+              M.push({ date: e.slice(0, 4) + '-' + e.slice(4, 6) + '-' + '01', value: d[i].VALUE['$'] })
             }
           }
           console.log(M)
@@ -130,7 +130,7 @@
 
       //load a master vegalite spec and modify it to the country and indicator
       setTimeout(function () {
-        d3.json("https://raw.githubusercontent.com/EconomicsObservatory/api/main/default_vega_lite_spec.json")
+        d3.json("./default_vega_lite_spec.json")
           .then(function (vlSpec) {
             vlSpec.data.values = M;
             if (timeSeries.date == "quarters.date")
@@ -178,6 +178,9 @@
         option.innerHTML = D[country][indicator].Title;
         indicatorSelector.appendChild(option);
       }
+      setTimeout(() => {
+        updateData()
+      }, 200);
     }
 
     function updateData() {
@@ -226,9 +229,11 @@
     setTimeout(() => {
       load(country, indicator);
       setTimeout(() => {
-        updateIndicatorSelector()  
+        updateIndicatorSelector()
       }, 200);
-      // updateData()
+      // setTimeout(() => {
+      //   updateData()
+      // }, 800);
     }, 200);  //
 
     setTimeout(() => {
